@@ -1,6 +1,6 @@
 import unittest
 
-from index_helper import IndexHelper
+from db_helper import DbHelper
 
 test_db_file = "./testdb.db"
 
@@ -10,7 +10,7 @@ class TestNewDb(unittest.TestCase):
     db = None
 
     def setUp(self):
-        self.db = IndexHelper(test_db_file)
+        self.db = DbHelper(test_db_file)
         self.db.initialize_db()
 
     def tearDown(self):
@@ -20,6 +20,18 @@ class TestNewDb(unittest.TestCase):
         # Note has already been initialized in setUp
         # Check list of columns or something
         pass
+
+    def test_db_persistence(self):
+        note_name = "notename"
+        note_text = "notetext"
+        self.db.create_note(note_name, note_text)
+
+        self.db._close()
+        self.db = DbHelper(test_db_file)
+
+        text = self.db.get_note_text(note_name)
+        self.assertEqual(note_text, text)
+
 
     def test_get_note_text(self):
         note_name = "notename"
@@ -51,18 +63,18 @@ class TestNewDb(unittest.TestCase):
     def test_update_new_note(self):
         note_name = "notename"
         note_text = "notetext"
-        nb_changes = self.db.update_note_text(note_name, note_text)
-        self.assertEqual(nb_changes, 0)
+        self.db.update_note_text(note_name, note_text)
+        db_text = self.db.get_note_text(note_name)
+        self.assertEqual(db_text, note_text)
 
     def test_update_note(self):
         note_name = "notename"
         note_text_initial = "notetext"
         note_text_final = "NoTeTeXt"
         self.db.create_note(note_name, note_text_initial)
-        nb_changes = self.db.update_note_text(note_name, note_text_final)
+        self.db.update_note_text(note_name, note_text_final)
         db_text = self.db.get_note_text(note_name)
         self.assertEqual(db_text, note_text_final)
-        self.assertEqual(nb_changes, 1)
 
     def test_add_and_check_keywords(self):
         note_name = "notename"

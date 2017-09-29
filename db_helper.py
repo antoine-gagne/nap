@@ -4,7 +4,7 @@ import itertools
 import sqlite3
 
 
-class IndexHelper():
+class DbHelper():
     """Manage the connection to the data db."""
 
     connection = None
@@ -37,10 +37,12 @@ class IndexHelper():
         Return:
           Int: Number of notes updated (likely 0 or 1)
         """
-        cursor = self._execute("""UPDATE notes set note_text = ?
-                                  WHERE name=?""", (text, name,))
-        cursor = self._execute("SELECT changes()")
-        return cursor.fetchone()[0]
+        cursor = self._execute("SELECT count(*) FROM notes WHERE name=?", (name,))
+        if cursor.fetchall()[0][0] == 0:
+            self.create_note(name, text)
+        else:
+            cursor = self._execute("""UPDATE notes set note_text = ?
+                                      WHERE name=?""", (text, name,))
 
     def get_note_text(self, name):
         """Return the text for a specific note."""
@@ -51,7 +53,12 @@ class IndexHelper():
     def get_notes_list(self):
         """Get the list of note names."""
         cursor = self._execute("SELECT name FROM notes")
-        return cursor.fetchall()
+        notes_list_fetched = cursor.fetchall()
+        if len(notes_list_fetched):
+            notes_list = [x[0] for x in notes_list_fetched]
+        else:
+            notes_list = []
+        return notes_list
 
     def add_note_keywords(self, name, keywords):
         """Add list of keywords to a note."""
@@ -83,4 +90,5 @@ class IndexHelper():
             c.execute(command, arguments)
         else:
             c.execute(command)
+        self.connection.commit()
         return c

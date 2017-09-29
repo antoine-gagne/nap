@@ -1,23 +1,27 @@
-"""Takes notes.
+"""Note A Problem.
 
 Attributes:
-    data_dir (str): The location where to store notes.
-    editor_app (str): The editor app to use.
+    SQLITE3_DB (str): The db file where info is stored.
+    EDITOR_APP (str): The editor app to use.
 """
 import argparse
-import json
-import logging
 import os
 import subprocess
 
-# TODO(AG): Move all configs under index, including relative path - for
-# easier testing
-data_dir = "./data/"
-editor_app = "suplemon"
+from db_helper import DbHelper
+
+# TODO(AG): Appart from the db file config, move configs in the db, including
+# relative path - for easier testing
+SQLITE3_DB = "./datadb.db"
+EDITOR_APP = "suplemon"
 
 
 class Main():
     """Create the notes."""
+    db = None
+
+    def __init__(self):
+        Main.db = DbHelper(SQLITE3_DB)
 
     def process_flags(self, arguments):
         """Send process flow in the right function.
@@ -26,130 +30,87 @@ class Main():
             arguments (argparse.Namespace): The arguments as received from argparse
         """
         # If -n [note_name] is passed, create a note
+        keywords = arguments.keywords
         if arguments.name:
-            self.edit_note(arguments.name)
+            self.edit_note(arguments.name, keywords)
         elif arguments.list:
             self.print_list_notes()
 
     def check_app_dir_initialized(self):
         """Make sure folder is ready to be used."""
 
-    def edit_note(self, name):
+    def edit_note(self, name, keywords):
         """Edit a note.
 
         Args:
             name (str): The note's name
         """
-        notevc = NoteVC(name)
-        notevc.edit_text()
+        # TODO(AG): Handle keywords
+        note = Note(name)
+        note.edit_text()
 
     def print_list_notes(self):
         """Print the list of notes.
 
         To be improved.
         """
-        notes_files = self.get_notes_files(data_dir)
+        notes_files = self.db.get_notes_list()
         for n in notes_files:
-            note = NoteVC(n)
-            note.short_print()
-
-    def get_notes_files(self, directory):
-        """List the note files.
-
-        Args:
-            directory (string): The directory where to list files from
-
-        Returns:
-            string[]: The list of files found
-        """
-        return [f for f in os.listdir(directory) if
-                os.path.isfile(os.path.join(directory, f))]
+            note = Note(n)
+            note.long_print()
 
 
-class NoteVC():
-    """Note view and controller.
+class Note():
+    """Note adapter.
+
+    Acts as an adapter that talks to the db. Main should only talk to high-
+    level objects, this takes care of the communication with the db_helper.
 
     Attributes:
         file_path (str): The path to the note file
         note (Note): Container for the Note data model
     """
 
-    file_path = ""
-    note = None
-
     def __init__(self, name):
-        """Create the Note View-Controller.
+        """Create the Note adapter.
 
         Args:
             name (string): the name of the note
         """
-        self.file_path = os.path.join(data_dir, name)
+        self.name = name
+        self.text = ""
+        self.load_text()
+
+    def load_text(self):
+        """Load the note's text."""
+
+        # TODO(AG): Make lazy loading text property instead.
         try:
-            with open(self.file_path, "r") as note_file:
-                text = note_file.read()
+            self.text = Main.db.get_note_text(self.name)
         except:
-            text = ""
-        self.note = Note(name, text)
+            self.text = ""
 
     def edit_text(self):
         """Launch the editor on the note."""
-        edited_text = open_editor(self.note.get_text())
-        self.note.set_text(edited_text)
+
+        edited_text = open_editor(self.text)
+        self.text = edited_text
         self.save_note()
 
     def save_note(self):
         """Save the note to file."""
-        with open(self.file_path, "w") as note_file:
-            note_file.write(self.note.get_text())
+        Main.db.update_note_text(self.name, self.text)
 
     def short_print(self):
         """Print a short summary of the note on one line."""
-        string = "{}:{}".format(self.note.name[:30], self.note.get_text()[:50])
+        string = "{}:{}".format(self.name[:30], self.text[:50])
         print(string)
 
     def long_print(self):
         """Print the full note data."""
         string = "{}\n=====================\n{}\n".format(
-            self.note.name, self.note.get_text())
+            self.name, self.text)
         print(string)
-
-
-class Note():
-    """Note model information.
-
-    Attributes:
-        name (str): The Note's name
-        text (str): The Note's text
-    """
-
-    name = ""
-    text = ""
-
-    def __init__(self, name, text):
-        """Initialize the note.
-
-        Args:
-        name (str): The Note's name
-        text (str): The Note's text  # TODO: Make lazy loading
-        """
-        self.name = name
-        self.text = text
-
-    def get_text(self):
-        """Get the Note's text.
-
-        Returns:
-            string: text
-        """
-        return self.text
-
-    def set_text(self, new_text):
-        """Set the Note's text..
-
-        Args:
-            new_text (string): The new Note's text.
-        """
-        self.text = new_text
 
 
 def open_editor(text_string):
@@ -164,7 +125,7 @@ def open_editor(text_string):
     tmp_path = '/tmp/nap_tmp'
     with open(tmp_path, "w") as tmp:
         tmp.write(text_string)
-    subprocess.call([editor_app, tmp_path])
+    subprocess.call([EDITOR_APP, tmp_path])
     with open(tmp_path, 'r') as tmp:
         new_string = tmp.read()
     return new_string
@@ -174,10 +135,10 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(prog="nap")
 
-    # TODO (AG) Figure out how to document empty args (will create a perm
-    # without name). Once thats done, change parse_known_args for parse_args.
     parser.add_argument("-n", "--name", type=str, metavar="NAME",
                         nargs="?", help="Create or edit a note")
+    parser.add_argument("-k", "--keywords", type=str, metavar="KW",
+                        nargs="*", help="Use keywords")
     parser.add_argument("-l", "--list", action='store_true',
                         help="List notes")
 
