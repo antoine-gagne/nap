@@ -51,6 +51,7 @@ class TestNewDb(unittest.TestCase):
 
         notes_list = self.db.get_notes_list()
         self.assertEqual(len(notes_list), 3)
+        self.assertEqual(notes_list[0], note_name1)
 
     def test_create_note(self):
         note_name = "notename"
@@ -102,9 +103,9 @@ class TestNewDb(unittest.TestCase):
         note_name = "note4"
         note_text = "notetext4"
         self.db.create_note(note_name, note_text)
-
         notes = self.db.get_notes_list([kw1])
         self.assertEqual(len(notes), 2)
+        self.assertEqual(notes[0], 'note1')
 
     def test_note_exists(self):
         note_name = "notename"

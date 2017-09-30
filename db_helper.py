@@ -77,12 +77,10 @@ class DbHelper():
                 notes_list_fetched.extend(data)
         else:
             cursor = self._execute("SELECT name FROM notes")
-            notes_list_fetched = cursor.fetchall()
-        if len(notes_list_fetched):
-            notes_list = [x[0] for x in notes_list_fetched]
-        else:
-            notes_list = []
-        return notes_list
+            notes_list_fetched = [x[0] for x in cursor.fetchall()]
+        if not len(notes_list_fetched):
+            notes_list_fetched = []
+        return notes_list_fetched
 
     def delete_note(self, name):
         self._execute("DELETE FROM notes WHERE name = ?", [name])

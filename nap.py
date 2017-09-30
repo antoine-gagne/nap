@@ -1,3 +1,4 @@
+#!/usr/bin/python3.6
 """Note A Problem.
 
 Attributes:
@@ -35,9 +36,9 @@ class Main():
         delete = arguments.delete
         if delete:
             self.delete_note(name)
-        elif arguments.name:
+        elif name:
             self.open_note_for_edit(name, keywords)
-        elif arguments.list:
+        elif list_notes:
             self.print_notes(keywords)
 
     def delete_note(self, name):
@@ -107,9 +108,9 @@ class NoteFacade():
         entry_text = '{}'.format(name)
         if kws:
             entry_text += (" : ")
-            entry_text +=("-".join(kws))
-        entry_text +=("\n=====================\n")
-        entry_text +=("{}\n".format(text))
+            entry_text += ("-".join(kws))
+        entry_text += ("\n=====================\n")
+        entry_text += ("{}\n".format(text))
         print(entry_text)
 
     @staticmethod
@@ -131,7 +132,7 @@ def open_editor(text_string):
         text_string (str): the initial text string to put in editor
 
     Returns:
-        TYPE: Description
+        (str): The string that was written in.
     """
     tmp_path = '/tmp/nap_tmp'
     with open(tmp_path, "w") as tmp:
