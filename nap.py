@@ -77,13 +77,17 @@ class NoteFacade():
     @staticmethod
     def edit_note(name, keywords):
         """Start editing a note's text, saving keywords if note is new."""
+        new_note = False
         if not Main.db.note_exists(name):
+            new_note = True
             Main.db.create_note(name, "", keywords)
         else:
             if keywords:
                 notify("Keywords are only applied on new notes.")
         text = Main.db.get_note_text(name)
         edited_text = open_editor(text)
+        if new_note and edited_text == "":
+            Main.db.delete_note(name)
         Main.db.update_note_text(name, edited_text)
 
     @staticmethod
