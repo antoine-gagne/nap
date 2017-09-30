@@ -65,7 +65,7 @@ class TestNewDb(unittest.TestCase):
         note_text = "notetext"
         self.db.update_note_text(note_name, note_text)
         db_text = self.db.get_note_text(note_name)
-        self.assertEqual(db_text, note_text)
+        self.assertEqual(db_text, None)
 
     def test_update_note(self):
         note_name = "notename"
@@ -83,6 +83,13 @@ class TestNewDb(unittest.TestCase):
         self.db.create_note(note_name, note_text)
         self.db.add_note_keywords(note_name, kws)
         kw = self.db.get_note_keywords(note_name)
+
+    def test_note_exists(self):
+        note_name = "notename"
+        note_text_initial = "notetext"
+        self.db.create_note(note_name, note_text_initial)
+        self.assertEqual(True, self.db.note_exists(note_name))
+        self.assertEqual(False, self.db.note_exists("unlikely_note_name"))
 
 if __name__ == '__main__':
     unittest.main()

@@ -20,16 +20,28 @@ class DbHelper():
         self._execute("DROP TABLE IF EXISTS notes")
         self._execute("DROP TABLE IF EXISTS keywords")
         self._execute("CREATE TABLE notes (name text, note_text text)")
-        self._execute("CREATE TABLE keywords (name text, keyword text, FOREIGN KEY(name) REFERENCES notes(name))")
+        self._execute(
+            "CREATE TABLE keywords (name text, keyword text, FOREIGN KEY(name) REFERENCES notes(name))")
         # TODO(AG) Add one-to-many for note keywords
         # TODO(AG) Add metadata table for settings and other stuff
 
-    def create_note(self, name, text):
-        """Create a note with given text."""
+    def note_exists(self, name):
+        """Check if note exists."""
+        cursor = self._execute(
+            "SELECT count(*) FROM notes WHERE name=?", (name,))
+        if cursor.fetchall()[0][0] == 1:
+            return True
+        else:
+            return False
+
+    def create_note(self, name, text, keywords=[]):
+        """Create a note with given text and keywords."""
         self._execute("INSERT INTO notes VALUES (?,?)", (name, text,))
+        if keywords:
+            self.add_note_keywords(name, keywords)
 
     def update_note_text(self, name, text):
-        """Update the text for a note.
+        """Update the text for a note. Does not create the note if inexistant.
 
         Args:
           name (str): The name of the note to update
@@ -37,18 +49,19 @@ class DbHelper():
         Return:
           Int: Number of notes updated (likely 0 or 1)
         """
-        cursor = self._execute("SELECT count(*) FROM notes WHERE name=?", (name,))
-        if cursor.fetchall()[0][0] == 0:
-            self.create_note(name, text)
-        else:
-            cursor = self._execute("""UPDATE notes set note_text = ?
-                                      WHERE name=?""", (text, name,))
+        if self.note_exists(name):
+            self._execute("""UPDATE notes set note_text = ?
+                             WHERE name=?""", (text, name,))
 
     def get_note_text(self, name):
-        """Return the text for a specific note."""
+        """Return the text for a specific note or None if inexistant."""
         cursor = self._execute("""SELECT note_text FROM notes
                                   WHERE name=?""", (name,))
-        return cursor.fetchone()[0]
+        text_array = cursor.fetchone()
+        if text_array is not None:
+            return text_array[0]
+        else:
+            return None
 
     def get_notes_list(self):
         """Get the list of note names."""
@@ -64,12 +77,18 @@ class DbHelper():
         """Add list of keywords to a note."""
         combinations = itertools.product([name], keywords)
         for c in combinations:
-            self._execute("INSERT INTO keywords (name, keyword) VALUES (?,?)", (c[0],c[1],))
+            self._execute(
+                "INSERT INTO keywords (name, keyword) VALUES (?,?)", (c[0], c[1],))
 
     def get_note_keywords(self, name):
         """Return the list of keywords for a note."""
-        cursor = self._execute("SELECT keyword FROM keywords WHERE name = ?", (name,))
+        cursor = self._execute(
+            "SELECT keyword FROM keywords WHERE name = ?", (name,))
         return [x[0] for x in cursor.fetchall()]
+
+    def _show_all_notes(self):
+        cursor = self._execute("SELECT * FROM notes")
+        return cursor.fetchall()
 
     # Private functions
     def _connect_db(self, db_path):

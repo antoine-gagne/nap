@@ -5,7 +5,6 @@ Attributes:
     EDITOR_APP (str): The editor app to use.
 """
 import argparse
-import os
 import subprocess
 
 from db_helper import DbHelper
@@ -30,24 +29,21 @@ class Main():
             arguments (argparse.Namespace): The arguments as received from argparse
         """
         # If -n [note_name] is passed, create a note
+        name = arguments.name
         keywords = arguments.keywords
         if arguments.name:
-            self.edit_note(arguments.name, keywords)
+            self.edit_note(name, keywords)
         elif arguments.list:
             self.print_list_notes()
-
-    def check_app_dir_initialized(self):
-        """Make sure folder is ready to be used."""
 
     def edit_note(self, name, keywords):
         """Edit a note.
 
         Args:
             name (str): The note's name
+            keywords (str[]): The note's keywords
         """
-        # TODO(AG): Handle keywords
-        note = Note(name)
-        note.edit_text()
+        NoteFacade.edit_note(name, keywords)
 
     def print_list_notes(self):
         """Print the list of notes.
@@ -56,50 +52,44 @@ class Main():
         """
         notes_files = self.db.get_notes_list()
         for n in notes_files:
-            note = Note(n)
             note.long_print()
 
 
-class Note():
-    """Note adapter.
+class NoteFacade():
+    """Note Facade.
 
-    Acts as an adapter that talks to the db. Main should only talk to high-
-    level objects, this takes care of the communication with the db_helper.
+    List the functionalities available to the Main. Aggregates the db_helper
+    functions.
 
     Attributes:
         file_path (str): The path to the note file
         note (Note): Container for the Note data model
     """
 
-    def __init__(self, name):
-        """Create the Note adapter.
+    @staticmethod
+    def edit_note(name, keywords):
+        """Start editing a note's text, saving keywords if note is new."""
+        if not Main.db.note_exists(name):
+            Main.db.create_note(name, "", keywords)
+        text = Main.db.get_note_text(name)
+        NoteFacade.edit_text(name, text)
 
-        Args:
-            name (string): the name of the note
-        """
-        self.name = name
-        self.text = ""
-        self.load_text()
-
-    def load_text(self):
+    @staticmethod
+    def load_text(note_name):
         """Load the note's text."""
-
         # TODO(AG): Make lazy loading text property instead.
-        try:
-            self.text = Main.db.get_note_text(self.name)
-        except:
-            self.text = ""
+        return Main.db.get_note_text(note_name)
 
-    def edit_text(self):
+    @staticmethod
+    def edit_text(name, text):
         """Launch the editor on the note."""
+        edited_text = open_editor(text)
+        NoteFacade.save_note(name, edited_text)
 
-        edited_text = open_editor(self.text)
-        self.text = edited_text
-        self.save_note()
-
-    def save_note(self):
+    @staticmethod
+    def save_note(name, text):
         """Save the note to file."""
-        Main.db.update_note_text(self.name, self.text)
+        Main.db.update_note_text(name, text)
 
     def short_print(self):
         """Print a short summary of the note on one line."""
@@ -124,7 +114,10 @@ def open_editor(text_string):
     """
     tmp_path = '/tmp/nap_tmp'
     with open(tmp_path, "w") as tmp:
-        tmp.write(text_string)
+        if text_string is not None:
+            tmp.write(text_string)
+        else:
+            tmp.write("")
     subprocess.call([EDITOR_APP, tmp_path])
     with open(tmp_path, 'r') as tmp:
         new_string = tmp.read()
