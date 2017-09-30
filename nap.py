@@ -32,11 +32,11 @@ class Main():
         name = arguments.name
         keywords = arguments.keywords
         if arguments.name:
-            self.edit_note(name, keywords)
+            self.open_note_for_edit(name, keywords)
         elif arguments.list:
-            self.print_list_notes()
+            self.print_notes(keywords)
 
-    def edit_note(self, name, keywords):
+    def open_note_for_edit(self, name, keywords):
         """Edit a note.
 
         Args:
@@ -45,14 +45,13 @@ class Main():
         """
         NoteFacade.edit_note(name, keywords)
 
-    def print_list_notes(self):
-        """Print the list of notes.
+    def print_notes(self, keywords):
+        """Print a list of filtered notes.
 
-        To be improved.
+        Args:
+          keywords (str[]): List of keywords to get notes from.
         """
-        notes_files = self.db.get_notes_list()
-        for n in notes_files:
-            note.long_print()
+        NoteFacade.print_notes_filtered_list(keywords)
 
 
 class NoteFacade():
@@ -71,37 +70,37 @@ class NoteFacade():
         """Start editing a note's text, saving keywords if note is new."""
         if not Main.db.note_exists(name):
             Main.db.create_note(name, "", keywords)
+        else:
+            if keywords:
+                notify("Keywords are only applied on new notes.")
         text = Main.db.get_note_text(name)
-        NoteFacade.edit_text(name, text)
-
-    @staticmethod
-    def load_text(note_name):
-        """Load the note's text."""
-        # TODO(AG): Make lazy loading text property instead.
-        return Main.db.get_note_text(note_name)
-
-    @staticmethod
-    def edit_text(name, text):
-        """Launch the editor on the note."""
         edited_text = open_editor(text)
-        NoteFacade.save_note(name, edited_text)
+        Main.db.update_note_text(name, edited_text)
 
     @staticmethod
-    def save_note(name, text):
-        """Save the note to file."""
-        Main.db.update_note_text(name, text)
+    def print_notes_filtered_list(keywords):
+        notes_files = Main.db.get_notes_list(keywords)
+        for n in notes_files:
+            NoteFacade.long_print(n)
 
-    def short_print(self):
+    @staticmethod
+    def short_print(name):
         """Print a short summary of the note on one line."""
-        string = "{}:{}".format(self.name[:30], self.text[:50])
+        text = Main.db.get_note_text(name)
+        string = "{}:{}".format(name[:30], text[:50])
         print(string)
 
-    def long_print(self):
+    @staticmethod
+    def long_print(name):
         """Print the full note data."""
-        string = "{}\n=====================\n{}\n".format(
-            self.name, self.text)
+        text = Main.db.get_note_text(name)
+        string = "{}\n=====================\n{}\n".format(name, text)
         print(string)
 
+
+def notify(info):
+    """Notify user of information"""
+    print(info)
 
 def open_editor(text_string):
     """Edit some text in a temporary file.

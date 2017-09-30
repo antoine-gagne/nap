@@ -63,10 +63,21 @@ class DbHelper():
         else:
             return None
 
-    def get_notes_list(self):
+    def get_notes_list(self, keywords=[]):
         """Get the list of note names."""
-        cursor = self._execute("SELECT name FROM notes")
-        notes_list_fetched = cursor.fetchall()
+        if keywords:
+            notes_list_fetched = []
+            for k in keywords:
+                query = """SELECT DISTINCT n.name
+                           FROM notes n JOIN keywords k
+                           ON (n.name = k.name)
+                           WHERE k.keyword=?"""
+                cursor = self._execute(query, [k])
+                data = [x[0] for x in cursor.fetchall()]
+                notes_list_fetched.extend(data)
+        else:
+            cursor = self._execute("SELECT name FROM notes")
+            notes_list_fetched = cursor.fetchall()
         if len(notes_list_fetched):
             notes_list = [x[0] for x in notes_list_fetched]
         else:

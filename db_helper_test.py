@@ -83,6 +83,29 @@ class TestNewDb(unittest.TestCase):
         self.db.create_note(note_name, note_text)
         self.db.add_note_keywords(note_name, kws)
         kw = self.db.get_note_keywords(note_name)
+        self.assertEqual(kw, kws)
+
+    def test_keywords_filtering(self):
+        kw1 = "kw1"
+        kw2 = "kw2"
+        note_name = "note1"
+        note_text = "notetext1"
+        kws = [kw1]
+        self.db.create_note(note_name, note_text, keywords=kws)
+        note_name = "note2"
+        note_text = "notetext2"
+        kws = [kw1]
+        self.db.create_note(note_name, note_text, keywords=kws)
+        note_name = "note3"
+        note_text = "notetext3"
+        kws = [kw2]
+        self.db.create_note(note_name, note_text, keywords=kws)
+        note_name = "note4"
+        note_text = "notetext4"
+        self.db.create_note(note_name, note_text)
+
+        notes = self.db.get_notes_list([kw1])
+        self.assertEqual(len(notes), 2)
 
     def test_note_exists(self):
         note_name = "notename"
