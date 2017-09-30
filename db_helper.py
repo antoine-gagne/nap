@@ -84,6 +84,10 @@ class DbHelper():
             notes_list = []
         return notes_list
 
+    def delete_note(self, name):
+        self._execute("DELETE FROM notes WHERE name = ?", [name])
+        self._execute("DELETE FROM keywords WHERE name = ?", [name])
+
     def add_note_keywords(self, name, keywords):
         """Add list of keywords to a note."""
         combinations = itertools.product([name], keywords)

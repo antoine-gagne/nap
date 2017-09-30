@@ -31,10 +31,18 @@ class Main():
         # If -n [note_name] is passed, create a note
         name = arguments.name
         keywords = arguments.keywords
-        if arguments.name:
+        list_notes = arguments.list
+        delete = arguments.delete
+        if delete:
+            self.delete_note(name)
+        elif arguments.name:
             self.open_note_for_edit(name, keywords)
         elif arguments.list:
             self.print_notes(keywords)
+
+    def delete_note(self, name):
+        """Deletes a note."""
+        NoteFacade.delete_note(name)
 
     def open_note_for_edit(self, name, keywords):
         """Edit a note.
@@ -79,6 +87,7 @@ class NoteFacade():
 
     @staticmethod
     def print_notes_filtered_list(keywords):
+        """Print notes as filtered by a list of KW."""
         notes_files = Main.db.get_notes_list(keywords)
         for n in notes_files:
             NoteFacade.long_print(n)
@@ -94,13 +103,26 @@ class NoteFacade():
     def long_print(name):
         """Print the full note data."""
         text = Main.db.get_note_text(name)
-        string = "{}\n=====================\n{}\n".format(name, text)
-        print(string)
+        kws = Main.db.get_note_keywords(name)
+        entry_text = '{}'.format(name)
+        if kws:
+            entry_text += (" : ")
+            entry_text +=("-".join(kws))
+        entry_text +=("\n=====================\n")
+        entry_text +=("{}\n".format(text))
+        print(entry_text)
+
+    @staticmethod
+    def delete_note(name):
+        """Delete a note"""
+        # TODO(AG): Think of more ways to delete notes (eg. by keywords?)
+        Main.db.delete_note(name)
 
 
 def notify(info):
     """Notify user of information"""
     print(info)
+
 
 def open_editor(text_string):
     """Edit some text in a temporary file.
@@ -131,8 +153,10 @@ if __name__ == "__main__":
                         nargs="?", help="Create or edit a note")
     parser.add_argument("-k", "--keywords", type=str, metavar="KW",
                         nargs="*", help="Use keywords")
-    parser.add_argument("-l", "--list", action='store_true',
+    parser.add_argument("-l", "--list", action="store_true",
                         help="List notes")
+    parser.add_argument("-d", "--delete", action="store_true",
+                        help="Delete a note")
 
     args = parser.parse_args()
 

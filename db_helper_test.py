@@ -32,7 +32,6 @@ class TestNewDb(unittest.TestCase):
         text = self.db.get_note_text(note_name)
         self.assertEqual(note_text, text)
 
-
     def test_get_note_text(self):
         note_name = "notename"
         note_text = "notetext"
@@ -113,6 +112,13 @@ class TestNewDb(unittest.TestCase):
         self.db.create_note(note_name, note_text_initial)
         self.assertEqual(True, self.db.note_exists(note_name))
         self.assertEqual(False, self.db.note_exists("unlikely_note_name"))
+
+    def test_note_delete(self):
+        note_name = "notename"
+        note_text_initial = "notetext"
+        self.db.create_note(note_name, note_text_initial)
+        self.db.delete_note(note_name)
+        self.assertEqual(len(self.db.get_notes_list()), 0)
 
 if __name__ == '__main__':
     unittest.main()
