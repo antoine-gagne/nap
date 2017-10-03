@@ -13,7 +13,7 @@ from db_helper import DbHelper
 # TODO(AG): Appart from the db file config, move configs in the db, including
 # relative path - for easier testing
 SQLITE3_DB = "./datadb.db"
-EDITOR_APP = "suplemon"
+EDITOR_APP = "gedit"  # Supports any text editor - vi, nano, gedit...
 
 
 class Main():
