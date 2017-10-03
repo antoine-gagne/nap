@@ -2,6 +2,7 @@
 
 import itertools
 import sqlite3
+import os
 
 
 class DbHelper():
@@ -14,7 +15,6 @@ class DbHelper():
         self._connect_db(db_path)
 
     # Public functions
-
     def initialize_db(self):
         """Initialize the db's tables."""
         self._execute("DROP TABLE IF EXISTS notes")
@@ -106,7 +106,13 @@ class DbHelper():
     # Private functions
     def _connect_db(self, db_path):
         """Connect to the database."""
+        # TODO (gagneturcotte) Improve how checking initial setup works
+        needs_init = False
+        if not os.path.exists(db_path):
+            needs_init = True
         self.connection = sqlite3.connect(db_path)
+        if needs_init:
+            self.initialize_db()
 
     def _close(self):
         self.connection.close()

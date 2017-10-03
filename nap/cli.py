@@ -1,4 +1,5 @@
-#!/usr/bin/python3.6
+#!/usr/bin/env python3
+
 """Note A Problem.
 
 Attributes:
@@ -6,22 +7,40 @@ Attributes:
     EDITOR_APP (str): The editor app to use.
 """
 import argparse
+import os
 import subprocess
 
-from db_helper import DbHelper
+from .db_helper import DbHelper
 
-# TODO(AG): Appart from the db file config, move configs in the db, including
-# relative path - for easier testing
-SQLITE3_DB = "./datadb.db"
+main_path = os.path.dirname(os.path.abspath(__file__))
+SQLITE3_DB = os.path.join(main_path, "datadb.db")
 EDITOR_APP = "gedit"  # Supports any text editor - vi, nano, gedit...
 
 
-class Main():
+def main():
+    parser = argparse.ArgumentParser(prog="nap")
+
+    parser.add_argument("-n", "--name", type=str, metavar="NAME",
+                        nargs="?", help="Create or edit a note")
+    parser.add_argument("-k", "--keywords", type=str, metavar="KW",
+                        nargs="*", help="Use keywords")
+    parser.add_argument("-l", "--list", action="store_true",
+                        help="List notes")
+    parser.add_argument("-d", "--delete", action="store_true",
+                        help="Delete a note")
+
+    args = parser.parse_args()
+
+    main = App()
+    main.process_flags(args)
+
+
+class App():
     """Create the notes."""
     db = None
 
     def __init__(self):
-        Main.db = DbHelper(SQLITE3_DB)
+        App.db = DbHelper(SQLITE3_DB)
 
     def process_flags(self, arguments):
         """Send process flow in the right function.
@@ -66,7 +85,7 @@ class Main():
 class NoteFacade():
     """Note Facade.
 
-    List the functionalities available to the Main. Aggregates the db_helper
+    List the functionalities available to the App. Aggregates the db_helper
     functions.
 
     Attributes:
@@ -78,37 +97,37 @@ class NoteFacade():
     def edit_note(name, keywords):
         """Start editing a note's text, saving keywords if note is new."""
         new_note = False
-        if not Main.db.note_exists(name):
+        if not App.db.note_exists(name):
             new_note = True
-            Main.db.create_note(name, "", keywords)
+            App.db.create_note(name, "", keywords)
         else:
             if keywords:
                 notify("Keywords are only applied on new notes.")
-        text = Main.db.get_note_text(name)
+        text = App.db.get_note_text(name)
         edited_text = open_editor(text)
         if new_note and edited_text == "":
-            Main.db.delete_note(name)
-        Main.db.update_note_text(name, edited_text)
+            App.db.delete_note(name)
+        App.db.update_note_text(name, edited_text)
 
     @staticmethod
     def print_notes_filtered_list(keywords):
         """Print notes as filtered by a list of KW."""
-        notes_files = Main.db.get_notes_list(keywords)
+        notes_files = App.db.get_notes_list(keywords)
         for n in notes_files:
             NoteFacade.long_print(n)
 
     @staticmethod
     def short_print(name):
         """Print a short summary of the note on one line."""
-        text = Main.db.get_note_text(name)
+        text = App.db.get_note_text(name)
         string = "{}:{}".format(name[:30], text[:50])
         print(string)
 
     @staticmethod
     def long_print(name):
         """Print the full note data."""
-        text = Main.db.get_note_text(name)
-        kws = Main.db.get_note_keywords(name)
+        text = App.db.get_note_text(name)
+        kws = App.db.get_note_keywords(name)
         entry_text = '{}'.format(name)
         if kws:
             entry_text += (" : ")
@@ -121,11 +140,11 @@ class NoteFacade():
     def delete_note(name):
         """Delete a note"""
         # TODO(AG): Think of more ways to delete notes (eg. by keywords?)
-        Main.db.delete_note(name)
+        App.db.delete_note(name)
 
 
 def notify(info):
-    """Notify user of information"""
+    """Notify user of information."""
     print(info)
 
 
@@ -151,19 +170,4 @@ def open_editor(text_string):
 
 
 if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser(prog="nap")
-
-    parser.add_argument("-n", "--name", type=str, metavar="NAME",
-                        nargs="?", help="Create or edit a note")
-    parser.add_argument("-k", "--keywords", type=str, metavar="KW",
-                        nargs="*", help="Use keywords")
-    parser.add_argument("-l", "--list", action="store_true",
-                        help="List notes")
-    parser.add_argument("-d", "--delete", action="store_true",
-                        help="Delete a note")
-
-    args = parser.parse_args()
-
-    main = Main()
-    main.process_flags(args)
+    main()
