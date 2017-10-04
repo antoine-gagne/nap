@@ -2,7 +2,7 @@
 
 import unittest
 
-from db_helper import DbHelper
+from .db_helper import DbHelper
 
 
 class TestNewDb(unittest.TestCase):
