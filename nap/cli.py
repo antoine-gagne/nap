@@ -161,16 +161,22 @@ def open_editor(text_string):
     Returns:
         (str): The string that was written in.
     """
-    tmp_path = '/tmp/nap_tmp'
-    with open(tmp_path, "w") as tmp:
-        if text_string is not None:
-            tmp.write(text_string)
-        else:
-            tmp.write("")
-    subprocess.call([EDITOR_APP, tmp_path])
-    with open(tmp_path, 'r') as tmp:
-        new_string = tmp.read()
+    if EDITOR_APP:
+        tmp_path = '/tmp/nap_tmp'
+        with open(tmp_path, "w") as tmp:
+            if text_string is not None:
+                tmp.write(text_string)
+            else:
+                tmp.write("")
+        subprocess.call([EDITOR_APP, tmp_path])
+        with open(tmp_path, 'r') as tmp:
+            new_string = tmp.read()
+    else:
+        fake_editor()
     return new_string
+
+def fake_editor():
+    pass
 
 
 if __name__ == "__main__":
