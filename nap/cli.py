@@ -7,14 +7,19 @@ Attributes:
     EDITOR_APP (str): The editor app to use.
 """
 import argparse
+import configparser
 import os
 import subprocess
 
 from .db_helper import DbHelper
 
 main_path = os.path.dirname(os.path.abspath(__file__))
-SQLITE3_DB = os.path.join(main_path, "datadb.db")
-EDITOR_APP = "gedit"  # Supports any text editor - vi, nano, gedit...
+
+config = configparser.ConfigParser()
+config.read(os.path.join(main_path, 'config.ini'))
+
+SQLITE3_DB = os.path.join(main_path, config["app"]["db_file"])
+EDITOR_APP = config["app"]["edit_launch_command"]
 
 
 def main():
