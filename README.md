@@ -30,4 +30,5 @@ To install the package so it points to the code rather than a static build:
 To build the package for distribution
     `python setup.py bdist_wheel`
 
-
+To run the tests
+    `tox`
