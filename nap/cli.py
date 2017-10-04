@@ -36,27 +36,23 @@ def main():
     args = parser.parse_args()
 
     main = App()
-    main.process_flags(args)
+    main.process_flags(args.name, args.keywords, args.list, args.delete)
 
 
 class App():
-    """Create the notes."""
+    """Handles the inputs and react accordingly."""
     db = None
 
     def __init__(self):
         App.db = DbHelper()
 
-    def process_flags(self, arguments):
+    def process_flags(self, name, keywords, list_notes, delete):
         """Send process flow in the right function.
 
         Args:
             arguments (argparse.Namespace): The arguments as received from argparse
         """
         # If -n [note_name] is passed, create a note
-        name = arguments.name
-        keywords = arguments.keywords
-        list_notes = arguments.list
-        delete = arguments.delete
         if delete:
             self.delete_note(name)
         elif name:
@@ -161,7 +157,7 @@ def open_editor(text_string):
     Returns:
         (str): The string that was written in.
     """
-    if EDITOR_APP:
+    if EDITOR_APP != "fake":
         tmp_path = '/tmp/nap_tmp'
         with open(tmp_path, "w") as tmp:
             if text_string is not None:
@@ -175,8 +171,14 @@ def open_editor(text_string):
         fake_editor()
     return new_string
 
+
 def fake_editor():
-    pass
+    """Mock the editor.
+
+    Return:
+      str: a predefined string
+    """
+    return "Fake_string"
 
 
 if __name__ == "__main__":

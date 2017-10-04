@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import unittest
 
 from db_helper import DbHelper
