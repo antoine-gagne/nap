@@ -18,7 +18,6 @@ main_path = os.path.dirname(os.path.abspath(__file__))
 config = configparser.ConfigParser()
 config.read(os.path.join(main_path, 'config.ini'))
 
-SQLITE3_DB = os.path.join(main_path, config["app"]["db_file"])
 EDITOR_APP = config["app"]["edit_launch_command"]
 
 
@@ -45,7 +44,7 @@ class App():
     db = None
 
     def __init__(self):
-        App.db = DbHelper(SQLITE3_DB)
+        App.db = DbHelper()
 
     def process_flags(self, arguments):
         """Send process flow in the right function.

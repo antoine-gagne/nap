@@ -2,15 +2,13 @@ import unittest
 
 from db_helper import DbHelper
 
-test_db_file = "./testdb.db"
-
 
 class TestNewDb(unittest.TestCase):
 
     db = None
 
     def setUp(self):
-        self.db = DbHelper(test_db_file)
+        self.db = DbHelper()
         self.db.initialize_db()
 
     def tearDown(self):
@@ -27,7 +25,7 @@ class TestNewDb(unittest.TestCase):
         self.db.create_note(note_name, note_text)
 
         self.db._close()
-        self.db = DbHelper(test_db_file)
+        self.db = DbHelper()
 
         text = self.db.get_note_text(note_name)
         self.assertEqual(note_text, text)
