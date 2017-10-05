@@ -34,9 +34,12 @@ def main():
                         help="Delete a note")
 
     args = parser.parse_args()
-
     main = App()
-    main.process_flags(args.name, args.keywords, args.list, args.delete)
+    name = args.name
+    keywords = args.keywords if args.keywords else []
+    list_notes = args.list
+    delete = args.delete
+    main.process_flags(name, keywords, list_notes, delete)
 
 
 class App():
@@ -47,18 +50,20 @@ class App():
     def __init__(self):
         App.db = DbHelper()
 
-    def process_flags(self, name, keywords, list_notes, delete):
+    def process_flags(self, name="", keywords=[], list_notes=False, delete=False):
         """Send process flow in the right function.
 
         Args:
-            arguments (argparse.Namespace): The arguments as received from argparse
+          name (str): note's name
+          keywords (str[]): note keywords
+          list_notes (bool): List notes?
+          delete (bool): Delete note? Require name to be passed too.
         """
-        # If -n [note_name] is passed, create a note
         if delete:
             self.delete_note(name)
         elif name:
             self.open_note_for_edit(name, keywords)
-        elif list_notes:
+        else:
             self.print_notes(keywords)
 
     def delete_note(self, name):
@@ -132,7 +137,7 @@ class NoteFacade():
         entry_text = '{}'.format(name)
         if kws:
             entry_text += (" : ")
-            entry_text += ("-".join(kws))
+            entry_text += (", ".join(kws))
         entry_text += ("\n=====================\n")
         entry_text += ("{}\n".format(text))
         print(entry_text)
@@ -169,7 +174,7 @@ def open_editor(text_string):
         with open(tmp_path, 'r') as tmp:
             new_string = tmp.read()
     else:
-        fake_edit()
+        new_string = fake_edit()
     return new_string
 
 
