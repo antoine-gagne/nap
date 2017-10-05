@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 """A setuptools based setup module.
 See:
@@ -68,6 +68,9 @@ setup(
     # simple. Or you can use find_packages().
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
 
+    install_requires=[
+        'configparser;python_version<"3"'
+    ],
 
     include_package_data=True,
 
