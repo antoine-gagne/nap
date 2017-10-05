@@ -3,7 +3,6 @@
 """Note A Problem.
 
 Attributes:
-    SQLITE3_DB (str): The db file where info is stored.
     EDITOR_APP (str): The editor app to use.
 """
 import argparse
@@ -22,6 +21,7 @@ EDITOR_APP = config["app"]["edit_launch_command"]
 
 
 def main():
+    """Distribute command line args."""
     parser = argparse.ArgumentParser(prog="nap")
 
     parser.add_argument("-n", "--name", type=str, metavar="NAME",
@@ -40,7 +40,8 @@ def main():
 
 
 class App():
-    """Handles the inputs and react accordingly."""
+    """Handle the inputs and react accordingly."""
+
     db = None
 
     def __init__(self):
@@ -61,7 +62,7 @@ class App():
             self.print_notes(keywords)
 
     def delete_note(self, name):
-        """Deletes a note."""
+        """Delete a note."""
         NoteFacade.delete_note(name)
 
     def open_note_for_edit(self, name, keywords):
@@ -138,7 +139,7 @@ class NoteFacade():
 
     @staticmethod
     def delete_note(name):
-        """Delete a note"""
+        """Delete a note."""
         # TODO(AG): Think of more ways to delete notes (eg. by keywords?)
         App.db.delete_note(name)
 
@@ -168,12 +169,12 @@ def open_editor(text_string):
         with open(tmp_path, 'r') as tmp:
             new_string = tmp.read()
     else:
-        fake_editor()
+        fake_edit()
     return new_string
 
 
-def fake_editor():
-    """Mock the editor.
+def fake_edit():
+    """Mock the editor for testing.
 
     Return:
       str: a predefined string
