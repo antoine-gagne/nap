@@ -2,15 +2,16 @@
 
 import unittest
 
-from .db_helper import DbHelper
+from nap.db.db_helper import DbHelper
 
 
 class TestNewDb(unittest.TestCase):
 
     db = None
+    db_name = 'testdb.db'
 
     def setUp(self):
-        self.db = DbHelper()
+        self.db = DbHelper(self.db_name)
         self.db.initialize_db()
 
     def tearDown(self):
@@ -27,7 +28,7 @@ class TestNewDb(unittest.TestCase):
         self.db.create_note(note_name, note_text)
 
         self.db._close()
-        self.db = DbHelper()
+        self.db = DbHelper(self.db_name)
 
         text = self.db.get_note_text(note_name)
         self.assertEqual(note_text, text)

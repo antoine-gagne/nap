@@ -69,7 +69,7 @@ setup(
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
 
     install_requires=[
-        'configparser;python_version<"3"'
+        'configparser;python_version<"3"',
     ],
 
     include_package_data=True,
@@ -79,7 +79,7 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'nap=nap.cli:main',
+            'nap=nap.cli.cli:main',
         ],
     },
 )

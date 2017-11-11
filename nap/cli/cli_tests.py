@@ -4,8 +4,8 @@
 
 import unittest
 
-from .cli import App
-from .db_helper import DbHelper
+from nap.db.db_helper import DbHelper
+from nap.cli.cli import App
 
 
 class TestNewDb(unittest.TestCase):

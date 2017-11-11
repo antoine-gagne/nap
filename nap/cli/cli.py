@@ -6,19 +6,25 @@ Attributes:
     EDITOR_APP (str): The editor app to use.
 """
 import argparse
-import configparser
+import logging
 import os
 import subprocess
 
-from .db_helper import DbHelper
+from nap import utils
+
+from nap.db.db_helper import DbHelper
 
 main_path = os.path.dirname(os.path.abspath(__file__))
 
-config = configparser.ConfigParser()
-config.read(os.path.join(main_path, 'config.ini'))
+config = utils.get_config_object()
 
 EDITOR_APP = config["app"]["edit_launch_command"]
 
+logger = logging.getLogger('nap_cli')
+logger.setLevel(logging.DEBUG)
+fh = logging.FileHandler('nap_log.log')
+fh.setLevel(logging.DEBUG)
+logger.addHandler(fh)
 
 def main():
     """Distribute command line args."""
@@ -36,6 +42,7 @@ def main():
     args = parser.parse_args()
     main = App()
     name = args.name
+    logger.debug("Called main with args {}".format(args))
     keywords = args.keywords if args.keywords else []
     list_notes = args.list
     delete = args.delete
@@ -108,7 +115,7 @@ class NoteFacade():
             App.db.create_note(name, "", keywords)
         else:
             if keywords:
-                notify("Keywords are only applied on new notes.")
+                logger.debug("Keywords are only applied on new notes.")
         text = App.db.get_note_text(name)
         edited_text = open_editor(text)
         if new_note and edited_text == "":
@@ -136,10 +143,10 @@ class NoteFacade():
         kws = App.db.get_note_keywords(name)
         entry_text = '{}'.format(name)
         if kws:
-            entry_text += (" : ")
-            entry_text += (", ".join(kws))
-        entry_text += ("\n=====================\n")
-        entry_text += ("{}\n".format(text))
+            entry_text += " : "
+            entry_text += ", ".join(kws)
+        entry_text += "\n=====================\n"
+        entry_text += "{}\n".format(text)
         print(entry_text)
 
     @staticmethod
@@ -163,18 +170,15 @@ def open_editor(text_string):
     Returns:
         (str): The string that was written in.
     """
-    if EDITOR_APP != "fake":
-        tmp_path = '/tmp/nap_tmp'
-        with open(tmp_path, "w") as tmp:
-            if text_string is not None:
-                tmp.write(text_string)
-            else:
-                tmp.write("")
-        subprocess.call([EDITOR_APP, tmp_path])
-        with open(tmp_path, 'r') as tmp:
-            new_string = tmp.read()
-    else:
-        new_string = fake_edit()
+    tmp_path = '/tmp/nap_tmp'
+    with open(tmp_path, "w") as tmp:
+        if text_string is not None:
+            tmp.write(text_string)
+        else:
+            tmp.write("")
+    subprocess.call([EDITOR_APP, tmp_path])
+    with open(tmp_path, 'r') as tmp:
+        new_string = tmp.read()
     return new_string
 
 

@@ -1,14 +1,13 @@
 """Library to help manage the index file stored as a sqlite db."""
 
-import configparser
 import itertools
 import sqlite3
 import os
 
-main_path = os.path.dirname(os.path.abspath(__file__))
-config = configparser.ConfigParser()
-config.read(os.path.join(main_path, 'config.ini'))
+from nap import utils
 
+main_path = os.path.dirname(os.path.abspath(__file__))
+config = utils.get_config_object()
 SQLITE3_DB = os.path.join(main_path, config["app"]["db_file"])
 
 
@@ -17,9 +16,13 @@ class DbHelper():
 
     connection = None
 
-    def __init__(self):
+    def __init__(self, db_override=None):
         """Initialize the Index object."""
-        self._connect_db(SQLITE3_DB)
+        if not db_override:
+            self._connect_db(SQLITE3_DB)
+        else:
+            path = os.path.join(main_path, db_override)
+            self._connect_db(path)
 
     # Public functions
     def initialize_db(self):
